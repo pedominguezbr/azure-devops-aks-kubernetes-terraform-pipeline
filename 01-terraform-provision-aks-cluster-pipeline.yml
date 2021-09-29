@@ -63,8 +63,8 @@ stages:
   jobs:
     - deployment: DeployDevAKSCluster
       displayName: DeployDevAKSCluster
-      pool:
-        name: 'pedominguezbr_pool'
+      #pool:
+      #  name: 'pedominguezbr_pool'
       environment: $(DEV_ENVIRONMENT)
       strategy:
         runOnce:
@@ -118,8 +118,8 @@ stages:
     - deployment: DeployQAAKSCluster
       dependsOn: DeployDevAKSCluster
       displayName: DeployQAAKSCluster
-      pool:
-        name: 'pedominguezbr_pool'
+      #pool:
+      #  name: 'pedominguezbr_pool'
       environment: $(QA_ENVIRONMENT)
       strategy:
         runOnce:
