@@ -99,7 +99,7 @@ stages:
 
 
 # Stage-2: Deploy Stages for QA
-- stage: DeployAKSQAClusters
+- stage: DeployAKSQACluster
   jobs:
     - deployment: DeployQAAKSCluster
       dependsOn: DeployDevAKSCluster
