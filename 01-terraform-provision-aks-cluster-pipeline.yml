@@ -31,7 +31,7 @@ stages:
       - task: TerraformInstaller@0
         displayName: Terraform Install
         inputs:
-          terraformVersion: 'latest'
+          terraformVersion: '1.0.8'
           
       - task: TerraformCLI@0
         displayName: Terraform Init
@@ -51,4 +51,11 @@ stages:
           command: 'validate'
           workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
           allowTelemetryCollection: false
-
+      - task: TerraformCLI@0
+        displayName: Terraform Apply
+        inputs:
+          command: 'apply'
+          workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+          environmentServiceName: 'terraform-aks-azurerm-svc-con'
+          commandOptions: '$(Pipeline.Workspace)/terraform-manifests-out/$(DEV_ENVIRONMENT)-$(Build.BuildId).out'
+          allowTelemetryCollection: false
