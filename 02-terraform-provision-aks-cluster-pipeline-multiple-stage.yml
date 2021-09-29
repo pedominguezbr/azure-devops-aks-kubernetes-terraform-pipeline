@@ -11,43 +11,9 @@ variables:
 - name: QA_ENVIRONMENT
   value: qa  
 
-# Stage-1: Terraform Validate Stage
-stages:
-- stage: TerraformValidate
-  jobs:
-    - job: TerraformValidateJob
-      continueOnError: false
-      steps:
-      - task: PublishPipelineArtifact@1
-        displayName: Publish Artifacts
-        inputs:
-          targetPath: '$(System.DefaultWorkingDirectory)/terraform-manifests'
-          artifact: 'terraform-manifests-out'
-          publishLocation: 'pipeline'
-      - task: TerraformInstaller@0
-        displayName: Terraform Install
-        inputs:
-          terraformVersion: '1.0.8'
-      - task: TerraformCLI@0
-        displayName: Terraform Init
-        inputs:
-          command: 'init'
-          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
-          backendType: 'azurerm'
-          backendServiceArm: 'terraform-aks-azurerm-svc-con'
-          backendAzureRmResourceGroupName: 'terraform-storage-rg'
-          backendAzureRmStorageAccountName: 'terraformstatexlrwdpmdb'
-          backendAzureRmContainerName: 'tfstatefiles'
-          backendAzureRmKey: 'aks-base.tfstate'
-          allowTelemetryCollection: false
-      - task: TerraformCLI@0
-        displayName: Terraform Validate
-        inputs:
-          command: 'validate'
-          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
-          allowTelemetryCollection: false
 
-# Stage-2: Deploy Stages for Dev
+stages:
+# Stage-1: Deploy Stages for Dev
 - stage: DeployAKSDevCluster
   jobs:
     - deployment: DeployDevAKSCluster
@@ -59,6 +25,12 @@ stages:
         runOnce:
           deploy:
             steps:
+            - task: PublishPipelineArtifact@1
+              displayName: Publish Artifacts
+              inputs:
+                targetPath: '$(System.DefaultWorkingDirectory)/terraform-manifests'
+                artifact: 'terraform-manifests-out-$(DEV_ENVIRONMENT)'
+                publishLocation: 'pipeline'
             - task: DownloadSecureFile@1
               displayName: Download SSH Key
               name: sshkey
@@ -72,7 +44,7 @@ stages:
               displayName: Terraform Init
               inputs:
                 command: 'init'
-                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out-$(DEV_ENVIRONMENT)'
                 backendType: 'azurerm'
                 backendServiceArm: 'terraform-aks-azurerm-svc-con'
                 backendAzureRmResourceGroupName: 'terraform-storage-rg'
@@ -81,20 +53,26 @@ stages:
                 backendAzureRmKey: 'aks-$(DEV_ENVIRONMENT).tfstate'
                 allowTelemetryCollection: false
             - task: TerraformCLI@0
+              displayName: Terraform Validate
+              inputs:
+                command: 'validate'
+                workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
+                allowTelemetryCollection: false
+            - task: TerraformCLI@0
               displayName: Terraform Plan
               inputs:
                 command: 'plan'
-                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out--$(DEV_ENVIRONMENT)'
                 environmentServiceName: 'terraform-aks-azurerm-svc-con'
-                commandOptions: '-var ssh_public_key=$(sshkey.secureFilePath) -var environment=$(DEV_ENVIRONMENT) -out $(Pipeline.Workspace)/terraform-manifests-out/$(DEV_ENVIRONMENT)-$(Build.BuildId).out'
+                commandOptions: '-var ssh_public_key=$(sshkey.secureFilePath) -var environment=$(DEV_ENVIRONMENT) -out $(Pipeline.Workspace)/terraform-manifests-out-$(DEV_ENVIRONMENT)/$(DEV_ENVIRONMENT)-$(Build.BuildId).out'
                 allowTelemetryCollection: false
             - task: TerraformCLI@0
               displayName: Terraform Apply
               inputs:
                 command: 'apply'
-                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out-$(QA_ENVIRONMENT)'
                 environmentServiceName: 'terraform-aks-azurerm-svc-con'
-                commandOptions: '$(Pipeline.Workspace)/terraform-manifests-out/$(DEV_ENVIRONMENT)-$(Build.BuildId).out'
+                commandOptions: '$(Pipeline.Workspace)/terraform-manifests-out-$(DEV_ENVIRONMENT)/$(DEV_ENVIRONMENT)-$(Build.BuildId).out'
                 allowTelemetryCollection: false
 
 
@@ -110,6 +88,12 @@ stages:
         runOnce:
           deploy:
             steps:
+            - task: PublishPipelineArtifact@1
+              displayName: Publish Artifacts
+              inputs:
+                targetPath: '$(System.DefaultWorkingDirectory)/terraform-manifests'
+                artifact: 'terraform-manifests-out-$(QA_ENVIRONMENT)'
+                publishLocation: 'pipeline'
             - task: DownloadSecureFile@1
               displayName: Download SSH Key
               name: sshkey
@@ -123,7 +107,7 @@ stages:
               displayName: Terraform Init
               inputs:
                 command: 'init'
-                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out-$(QA_ENVIRONMENT)'
                 backendType: 'azurerm'
                 backendServiceArm: 'terraform-aks-azurerm-svc-con'
                 backendAzureRmResourceGroupName: 'terraform-storage-rg'
@@ -132,18 +116,24 @@ stages:
                 backendAzureRmKey: 'aks-$(QA_ENVIRONMENT).tfstate'
                 allowTelemetryCollection: false
             - task: TerraformCLI@0
+              displayName: Terraform Validate
+              inputs:
+                command: 'validate'
+                workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
+                allowTelemetryCollection: false
+            - task: TerraformCLI@0
               displayName: Terraform Plan
               inputs:
                 command: 'plan'
-                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out-$(QA_ENVIRONMENT)'
                 environmentServiceName: 'terraform-aks-azurerm-svc-con'
-                commandOptions: '-var ssh_public_key=$(sshkey.secureFilePath) -var environment=$(QA_ENVIRONMENT) -out $(Pipeline.Workspace)/terraform-manifests-out/$(QA_ENVIRONMENT)-$(Build.BuildId).out'
+                commandOptions: '-var ssh_public_key=$(sshkey.secureFilePath) -var environment=$(QA_ENVIRONMENT) -out $(Pipeline.Workspace)/terraform-manifests-out-$(QA_ENVIRONMENT)/$(QA_ENVIRONMENT)-$(Build.BuildId).out'
                 allowTelemetryCollection: false
             - task: TerraformCLI@0
               displayName: Terraform Apply
               inputs:
                 command: 'apply'
-                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+                workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out-$(QA_ENVIRONMENT)'
                 environmentServiceName: 'terraform-aks-azurerm-svc-con'
-                commandOptions: '$(Pipeline.Workspace)/terraform-manifests-out/$(QA_ENVIRONMENT)-$(Build.BuildId).out'
+                commandOptions: '$(Pipeline.Workspace)/terraform-manifests-out-$(QA_ENVIRONMENT)/$(QA_ENVIRONMENT)-$(Build.BuildId).out'
                 allowTelemetryCollection: false
