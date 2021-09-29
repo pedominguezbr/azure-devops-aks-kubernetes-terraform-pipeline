@@ -64,6 +64,8 @@ stages:
   jobs:
     - deployment: DeployDevAKSCluster
       displayName: DeployDevAKSCluster
+      pool:
+        name: 'pedominguezbr_pool'
       environment: $(DEV_ENVIRONMENT)
       strategy:
         runOnce:
