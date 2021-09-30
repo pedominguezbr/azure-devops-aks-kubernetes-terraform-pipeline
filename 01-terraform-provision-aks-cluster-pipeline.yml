@@ -65,6 +65,8 @@ stages:
       displayName: DeployDevAKSCluster
       #pool:
       #  name: 'pedominguezbr_pool'
+      workspace:
+        clean: all
       environment: $(DEV_ENVIRONMENT)
       strategy:
         runOnce:
@@ -120,6 +122,8 @@ stages:
       displayName: DeployQAAKSCluster
       #pool:
       #  name: 'pedominguezbr_pool'
+      workspace:
+        clean: all
       environment: $(QA_ENVIRONMENT)
       strategy:
         runOnce:
