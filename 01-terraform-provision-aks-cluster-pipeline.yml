@@ -91,7 +91,7 @@ stages:
                 backendAzureRmResourceGroupName: 'terraform-storage-rg'
                 backendAzureRmStorageAccountName: 'terraformstatexlrwdpmdb'
                 backendAzureRmContainerName: 'tfstatefiles'
-                backendAzureRmKey: 'aks-$(DEV_ENVIRONMENT).tfstate'
+                backendAzureRmKey: 'aks-pipeline-$(DEV_ENVIRONMENT).tfstate'
                 allowTelemetryCollection: false
             - task: TerraformCLI@0
               displayName: Terraform Plan
@@ -154,7 +154,7 @@ stages:
                 backendAzureRmResourceGroupName: 'terraform-storage-rg'
                 backendAzureRmStorageAccountName: 'terraformstatexlrwdpmdb'
                 backendAzureRmContainerName: 'tfstatefiles'
-                backendAzureRmKey: 'aks-$(QA_ENVIRONMENT).tfstate'
+                backendAzureRmKey: 'aks-pipeline-$(QA_ENVIRONMENT).tfstate'
                 allowTelemetryCollection: false
             - task: TerraformCLI@0
               displayName: Terraform Plan
